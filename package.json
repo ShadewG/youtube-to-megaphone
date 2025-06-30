@@ -1,0 +1,24 @@
+{
+  "name": "youtube-to-megaphone",
+  "version": "1.0.0",
+  "description": "Automatically download YouTube videos and upload audio to Megaphone",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "keywords": ["youtube", "megaphone", "podcast", "automation"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.7",
+    "dotenv": "^16.4.1",
+    "express": "^4.18.2",
+    "fluent-ffmpeg": "^2.1.2",
+    "form-data": "^4.0.0",
+    "node-cron": "^3.0.3",
+    "winston": "^3.11.0",
+    "youtube-dl-exec": "^2.4.17"
+  }
+}
