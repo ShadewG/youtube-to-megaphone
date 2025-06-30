@@ -169,6 +169,23 @@
             </div>
         </div>
         
+        <!-- Channel ID Finder Card -->
+        <div class="card">
+            <h2>Find Channel ID</h2>
+            <p style="margin-bottom: 20px;">Search for a YouTube channel to find its ID.</p>
+            
+            <form id="channel-search-form">
+                <div class="form-group">
+                    <label for="channel-name">Channel Name</label>
+                    <input type="text" id="channel-name" placeholder="e.g., InsanityBodycam" required>
+                </div>
+                
+                <button type="submit">Search Channel</button>
+            </form>
+            
+            <div id="channel-results" style="margin-top: 20px;"></div>
+        </div>
+        
         <!-- Manual Upload Card -->
         <div class="card">
             <h2>Manual Video Upload</h2>
@@ -294,6 +311,45 @@
             } finally {
                 button.disabled = false;
                 button.textContent = 'Download & Upload as Draft';
+            }
+        });
+        
+        // Handle channel search
+        document.getElementById('channel-search-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const channelName = document.getElementById('channel-name').value;
+            const resultsDiv = document.getElementById('channel-results');
+            
+            resultsDiv.innerHTML = '<p>Searching...</p>';
+            
+            try {
+                const response = await fetch('/find-channel-id', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ channelName })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    resultsDiv.innerHTML = `<p class="error">Error: ${data.error}</p>`;
+                } else if (data.results && data.results.length > 0) {
+                    resultsDiv.innerHTML = '<h3>Found Channels:</h3>' + 
+                        data.results.map(channel => `
+                            <div style="margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                                <strong>${channel.channelTitle}</strong><br>
+                                <code style="background: #e0e0e0; padding: 2px 5px; border-radius: 3px;">${channel.channelId}</code><br>
+                                <small>${channel.description ? channel.description.substring(0, 100) + '...' : 'No description'}</small>
+                            </div>
+                        `).join('');
+                } else {
+                    resultsDiv.innerHTML = '<p>No channels found</p>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
             }
         });
         

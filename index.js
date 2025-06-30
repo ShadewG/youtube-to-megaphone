@@ -49,6 +49,23 @@ app.get('/activity', async (req, res) => {
   }
 });
 
+// Channel ID lookup endpoint
+app.post('/find-channel-id', async (req, res) => {
+  const { channelName } = req.body;
+  
+  if (!channelName) {
+    return res.status(400).json({ error: 'Channel name is required' });
+  }
+  
+  try {
+    const searchResults = await youtubeMonitor.searchChannel(channelName);
+    res.json({ results: searchResults });
+  } catch (error) {
+    logger.error('Error searching for channel:', error);
+    res.status(500).json({ error: 'Failed to search for channel' });
+  }
+});
+
 // Manual trigger endpoint
 app.post('/check-now', async (req, res) => {
   try {

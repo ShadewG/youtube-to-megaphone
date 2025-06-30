@@ -41,6 +41,17 @@ export class YouTubeMonitor {
         }
       });
 
+      logger.info(`Channel API response for ${channelId}:`, {
+        itemCount: channelResponse.data.items?.length || 0,
+        pageInfo: channelResponse.data.pageInfo
+      });
+
+      if (!channelResponse.data.items || channelResponse.data.items.length === 0) {
+        logger.error(`No channel found with ID: ${channelId}`);
+        logger.info(`Note: You must use channel IDs, not channel names. Find channel IDs at: https://commentpicker.com/youtube-channel-id.php`);
+        return [];
+      }
+
       const uploadsPlaylistId = channelResponse.data.items[0]?.contentDetails?.relatedPlaylists?.uploads;
       
       if (!uploadsPlaylistId) {
@@ -157,5 +168,29 @@ export class YouTubeMonitor {
       this.stateFile, 
       JSON.stringify(Array.from(this.processedVideos), null, 2)
     );
+  }
+
+  async searchChannel(channelName) {
+    try {
+      const response = await axios.get(`${this.baseUrl}/search`, {
+        params: {
+          key: this.apiKey,
+          q: channelName,
+          type: 'channel',
+          part: 'snippet',
+          maxResults: 5
+        }
+      });
+
+      return response.data.items.map(item => ({
+        channelId: item.id.channelId,
+        channelTitle: item.snippet.channelTitle,
+        description: item.snippet.description,
+        thumbnailUrl: item.snippet.thumbnails.default?.url
+      }));
+    } catch (error) {
+      logger.error('Error searching for channel:', error);
+      throw error;
+    }
   }
 }

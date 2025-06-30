@@ -16,12 +16,20 @@
 
 #### `CHANNEL_IDS` (Required)
 - **Description**: Comma-separated list of YouTube channel IDs to monitor
+- **IMPORTANT**: You must use channel IDs, NOT channel names!
 - **How to find channel ID**:
-  1. Go to the YouTube channel
-  2. View page source (right-click → "View Page Source")
-  3. Search for "channelId"
-  4. Or use: https://commentpicker.com/youtube-channel-id.php
+  1. **Use the app's Channel ID Finder** (recommended):
+     - Go to your app's web UI
+     - Use the "Find Channel ID" section
+     - Search for the channel name
+     - Copy the channel ID from the results
+  2. **Manual method**:
+     - Go to the YouTube channel
+     - View page source (right-click → "View Page Source")
+     - Search for "channelId"
+  3. **Online tool**: https://commentpicker.com/youtube-channel-id.php
 - **Example**: `UCddiUEpeqJcYeBxX1IVBKvQ,UC_x5XG1OV2P6uZZ5FSM9Ttw`
+- **Wrong**: `InsanityBodycam,DrInsanityCrime` (these are channel names, not IDs!)
 
 ### Megaphone Configuration
 
