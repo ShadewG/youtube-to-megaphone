@@ -1,14 +1,20 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cron from 'node-cron';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { YouTubeMonitor } from './src/youtube-monitor.js';
 import { MegaphoneUploader } from './src/megaphone-uploader.js';
 import { logger } from './src/logger.js';
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 const youtubeMonitor = new YouTubeMonitor();
 const megaphoneUploader = new MegaphoneUploader();
@@ -22,6 +28,27 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Status endpoint with more details
+app.get('/status', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    monitoringChannels: process.env.CHANNEL_IDS ? process.env.CHANNEL_IDS.split(',').map(id => id.trim()) : [],
+    checkInterval: process.env.CHECK_INTERVAL || '*/5 * * * *'
+  });
+});
+
+// Recent activity endpoint
+app.get('/activity', async (req, res) => {
+  try {
+    const logs = await logger.getRecentLogs();
+    res.json({ logs });
+  } catch (error) {
+    res.json({ logs: 'Unable to fetch logs' });
+  }
+});
+
 // Manual trigger endpoint
 app.post('/check-now', async (req, res) => {
   try {
@@ -31,6 +58,65 @@ app.post('/check-now', async (req, res) => {
   } catch (error) {
     logger.error('Error during manual check:', error);
     res.status(500).json({ error: 'Failed to initiate check' });
+  }
+});
+
+// Manual video upload endpoint
+app.post('/upload-video', async (req, res) => {
+  const { videoUrl } = req.body;
+  
+  if (!videoUrl) {
+    return res.status(400).json({ error: 'Video URL is required' });
+  }
+  
+  // Set up SSE for streaming logs
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  
+  const sendLog = (message) => {
+    res.write(JSON.stringify({ type: 'log', message }) + '\n');
+  };
+  
+  try {
+    sendLog('Fetching video details...');
+    
+    // Extract video ID from URL
+    const videoIdMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+    if (!videoIdMatch) {
+      throw new Error('Invalid YouTube URL');
+    }
+    
+    const videoId = videoIdMatch[1];
+    const video = await youtubeMonitor.getVideoDetails(videoId);
+    
+    sendLog(`Found video: ${video.title}`);
+    sendLog('Downloading video and extracting audio...');
+    
+    // Download and extract audio
+    const audioPath = await youtubeMonitor.downloadAndExtractAudio(video);
+    
+    sendLog('Audio extracted successfully');
+    sendLog('Uploading to Megaphone as draft...');
+    
+    // Upload to Megaphone as draft
+    const episodeId = await megaphoneUploader.uploadEpisode({
+      audioPath,
+      title: video.title,
+      description: video.description,
+      publishDate: video.publishDate,
+      thumbnailUrl: video.thumbnailUrl,
+      isDraft: true // This flag will tell Megaphone to save as draft
+    });
+    
+    sendLog(`Successfully uploaded as draft with ID: ${episodeId}`);
+    res.write(JSON.stringify({ type: 'complete', episodeId }) + '\n');
+    
+  } catch (error) {
+    logger.error('Error during manual upload:', error);
+    res.write(JSON.stringify({ type: 'error', message: error.message }) + '\n');
+  } finally {
+    res.end();
   }
 });
 

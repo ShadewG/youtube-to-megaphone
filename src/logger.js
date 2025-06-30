@@ -1,6 +1,7 @@
 import winston from 'winston';
+import fs from 'fs/promises';
 
-export const logger = winston.createLogger({
+const loggers = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
     winston.format.timestamp(),
@@ -25,3 +26,17 @@ export const logger = winston.createLogger({
     })
   ]
 });
+
+// Add method to get recent logs
+loggers.getRecentLogs = async function() {
+  try {
+    const logs = await fs.readFile('combined.log', 'utf8');
+    const lines = logs.split('\n').filter(line => line.trim());
+    // Return last 50 lines
+    return lines.slice(-50).join('\n');
+  } catch (error) {
+    return 'No logs available';
+  }
+};
+
+export const logger = loggers;

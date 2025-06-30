@@ -10,7 +10,7 @@ export class MegaphoneUploader {
     this.apiUrl = process.env.MEGAPHONE_API_URL || 'https://api.megaphone.fm';
   }
 
-  async uploadEpisode({ audioPath, title, description, publishDate, thumbnailUrl }) {
+  async uploadEpisode({ audioPath, title, description, publishDate, thumbnailUrl, isDraft = false }) {
     try {
       // Note: This is a placeholder implementation as Megaphone's API documentation
       // is not publicly available. You'll need to adjust this based on actual API specs.
@@ -20,7 +20,7 @@ export class MegaphoneUploader {
         title,
         description,
         publishedAt: publishDate,
-        status: 'published',
+        status: isDraft ? 'draft' : 'published',
         podcastId: this.podcastId
       };
 
