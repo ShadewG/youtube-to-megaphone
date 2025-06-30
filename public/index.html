@@ -167,6 +167,11 @@
             <div class="monitoring-channels" id="monitoring-channels">
                 <!-- Will be populated dynamically -->
             </div>
+            
+            <h3 style="margin-top: 20px;">Configuration Status</h3>
+            <div id="config-status" style="margin-top: 10px;">
+                <!-- Will be populated dynamically -->
+            </div>
         </div>
         
         <!-- Channel ID Finder Card -->
@@ -232,6 +237,29 @@
                 channelsDiv.innerHTML = data.monitoringChannels.map(channel => 
                     `<span class="channel-tag">${channel}</span>`
                 ).join('');
+                
+                // Display configuration status
+                if (data.configuration) {
+                    const config = data.configuration;
+                    const configHtml = `
+                        <div style="font-size: 14px;">
+                            <p><strong>YouTube:</strong> 
+                                ${config.youtube.hasApiKey ? '✓ API Key Set' : '✗ API Key Missing'} | 
+                                ${config.youtube.channelCount} channels
+                            </p>
+                            <p><strong>Megaphone:</strong> 
+                                ${config.megaphone.hasToken ? '✓ Token' : '✗ Token'} | 
+                                ${config.megaphone.hasNetworkId ? '✓ Network ID' : '✗ Network ID'} | 
+                                ${config.megaphone.hasPodcastId ? '✓ Podcast ID' : '✗ Podcast ID'}
+                            </p>
+                            <p><strong>Mode:</strong> 
+                                ${config.testMode ? 'TEST MODE' : 'Production'} | 
+                                Ads: ${config.adsEnabled ? 'Enabled' : 'Disabled'}
+                            </p>
+                        </div>
+                    `;
+                    document.getElementById('config-status').innerHTML = configHtml;
+                }
                 
             } catch (error) {
                 document.getElementById('status-indicator').className = 'status-indicator status-error';

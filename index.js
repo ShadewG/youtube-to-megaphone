@@ -9,6 +9,16 @@ import { logger } from './src/logger.js';
 
 dotenv.config();
 
+// Debug environment variables
+logger.info('Environment check:', {
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  hasYouTubeKey: !!process.env.YOUTUBE_API_KEY,
+  hasMegaphoneToken: !!process.env.MEGAPHONE_API_TOKEN,
+  hasMegaphoneNetwork: !!process.env.MEGAPHONE_NETWORK_ID,
+  hasMegaphonePodcast: !!process.env.MEGAPHONE_PODCAST_ID,
+  testMode: process.env.TEST_MODE
+});
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -35,7 +45,21 @@ app.get('/status', (req, res) => {
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
     monitoringChannels: process.env.CHANNEL_IDS ? process.env.CHANNEL_IDS.split(',').map(id => id.trim()) : [],
-    checkInterval: process.env.CHECK_INTERVAL || '*/5 * * * *'
+    checkInterval: process.env.CHECK_INTERVAL || '*/5 * * * *',
+    configuration: {
+      youtube: {
+        hasApiKey: !!process.env.YOUTUBE_API_KEY,
+        channelCount: process.env.CHANNEL_IDS ? process.env.CHANNEL_IDS.split(',').length : 0
+      },
+      megaphone: {
+        hasToken: !!process.env.MEGAPHONE_API_TOKEN,
+        hasNetworkId: !!process.env.MEGAPHONE_NETWORK_ID,
+        hasPodcastId: !!process.env.MEGAPHONE_PODCAST_ID,
+        apiUrl: process.env.MEGAPHONE_API_URL || 'https://cms.megaphone.fm/api'
+      },
+      testMode: process.env.TEST_MODE === 'true',
+      adsEnabled: process.env.ENABLE_ADS === 'true'
+    }
   });
 });
 

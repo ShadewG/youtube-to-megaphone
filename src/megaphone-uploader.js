@@ -10,6 +10,15 @@ export class MegaphoneUploader {
     this.podcastId = process.env.MEGAPHONE_PODCAST_ID;
     this.apiUrl = process.env.MEGAPHONE_API_URL || 'https://cms.megaphone.fm/api';
     
+    // Debug logging
+    logger.info('Megaphone configuration:', {
+      hasToken: !!this.apiToken,
+      tokenLength: this.apiToken?.length || 0,
+      networkId: this.networkId || 'NOT SET',
+      podcastId: this.podcastId || 'NOT SET',
+      apiUrl: this.apiUrl
+    });
+    
     if (!this.apiToken) {
       logger.warn('MEGAPHONE_API_TOKEN not set. Generate one in Megaphone Settings.');
     }
