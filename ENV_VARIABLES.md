@@ -49,10 +49,18 @@
   3. The ID is usually in the URL or settings page
 - **Example**: `PPL1234567890`
 
-#### `MEGAPHONE_API_URL` (Optional)
+#### `MEGAPHONE_API_URL` (Required)
 - **Description**: Megaphone API base URL
-- **Default**: `https://api.megaphone.fm`
-- **Note**: Only change if Megaphone provides a different endpoint
+- **IMPORTANT**: There is no default - you MUST get this from Megaphone support
+- **Possible values** (contact Megaphone to confirm):
+  - `https://cms.megaphone.fm/api/v1`
+  - `https://api-prod.megaphone.fm`
+  - `https://partners.megaphone.fm/api`
+  - Or another endpoint they provide
+- **How to get it**:
+  1. Contact Megaphone support
+  2. Ask for API access and documentation
+  3. They will provide the correct API endpoint
 
 ### Application Configuration
 
@@ -79,6 +87,12 @@
 - **Description**: Logging verbosity
 - **Default**: `info`
 - **Options**: `error`, `warn`, `info`, `debug`
+
+#### `TEST_MODE` (Optional)
+- **Description**: Run without actually uploading to Megaphone
+- **Default**: `false`
+- **Options**: `true`, `false`
+- **Use case**: Test the YouTube download functionality without Megaphone API
 
 ## Setting Variables on Railway
 
