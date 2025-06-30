@@ -33,34 +33,63 @@
 
 ### Megaphone Configuration
 
-#### `MEGAPHONE_API_KEY` (Required)
-- **Description**: Your Megaphone API authentication key
+#### `MEGAPHONE_API_TOKEN` (Required)
+- **Description**: Your Megaphone API authentication token
 - **How to get it**:
-  1. Contact Megaphone support for API access
-  2. They typically require you to be a larger publisher
-  3. API access is provided after approval
-- **Example**: `mg_prod_1234567890abcdef`
+  1. Log in to Megaphone
+  2. Hover over your initials in the lower-left corner
+  3. Select "Settings"
+  4. Click "Generate New Token"
+- **Example**: `abc123def456ghi789`
+
+#### `MEGAPHONE_NETWORK_ID` (Required)
+- **Description**: Your network ID in Megaphone
+- **How to find it**:
+  1. Log into Megaphone
+  2. Look at the URL when viewing your network
+  3. It's the UUID in the URL
+- **Example**: `b747d182-1a54-11e7-ad32-3f1f4d195638`
 
 #### `MEGAPHONE_PODCAST_ID` (Required)
 - **Description**: Your podcast ID in Megaphone
 - **How to find it**:
   1. Log into your Megaphone dashboard
-  2. Go to your podcast settings
-  3. The ID is usually in the URL or settings page
-- **Example**: `PPL1234567890`
+  2. Go to your podcast
+  3. Look at the URL - it contains the podcast ID (UUID format)
+- **Example**: `b806f3fa-1a54-11e7-ad32-1382d7625b09`
 
-#### `MEGAPHONE_API_URL` (Required)
+#### `MEGAPHONE_API_URL` (Optional)
 - **Description**: Megaphone API base URL
-- **IMPORTANT**: There is no default - you MUST get this from Megaphone support
-- **Possible values** (contact Megaphone to confirm):
-  - `https://cms.megaphone.fm/api/v1`
-  - `https://api-prod.megaphone.fm`
-  - `https://partners.megaphone.fm/api`
-  - Or another endpoint they provide
-- **How to get it**:
-  1. Contact Megaphone support
-  2. Ask for API access and documentation
-  3. They will provide the correct API endpoint
+- **Default**: `https://cms.megaphone.fm/api`
+- **Note**: Only change if Megaphone provides a different endpoint
+
+### Ad Configuration (Optional)
+
+#### `ENABLE_ADS` (Optional)
+- **Description**: Enable automatic ad insertion
+- **Default**: `false`
+- **Options**: `true`, `false`
+
+#### `PREROLL_COUNT` (Optional)
+- **Description**: Number of pre-roll ads
+- **Default**: `1`
+- **Note**: Only used if ENABLE_ADS=true
+
+#### `POSTROLL_COUNT` (Optional)
+- **Description**: Number of post-roll ads
+- **Default**: `1`
+- **Note**: Only used if ENABLE_ADS=true
+
+#### `MIDROLL_INTERVAL` (Optional)
+- **Description**: Interval between midroll ads in seconds
+- **Default**: Not set
+- **Example**: `300` (5 minutes)
+- **Note**: Midrolls are only added if this is set and ENABLE_ADS=true
+
+#### `MIDROLL_AD_COUNT` (Optional)
+- **Description**: Number of ads per midroll break
+- **Default**: `1`
+- **Note**: Only used if MIDROLL_INTERVAL is set
 
 ### Application Configuration
 

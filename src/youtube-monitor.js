@@ -103,6 +103,18 @@ export class YouTubeMonitor {
 
     const video = response.data.items[0];
     
+    // Parse ISO 8601 duration to seconds
+    const parseDuration = (isoDuration) => {
+      const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      if (!match) return 0;
+      
+      const hours = parseInt(match[1] || 0);
+      const minutes = parseInt(match[2] || 0);
+      const seconds = parseInt(match[3] || 0);
+      
+      return hours * 3600 + minutes * 60 + seconds;
+    };
+    
     return {
       id: videoId,
       title: video.snippet.title,
@@ -112,6 +124,7 @@ export class YouTubeMonitor {
                      video.snippet.thumbnails.high?.url ||
                      video.snippet.thumbnails.default?.url,
       duration: video.contentDetails.duration,
+      durationSeconds: parseDuration(video.contentDetails.duration),
       url: `https://www.youtube.com/watch?v=${videoId}`
     };
   }

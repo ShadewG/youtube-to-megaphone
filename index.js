@@ -123,6 +123,7 @@ app.post('/upload-video', async (req, res) => {
       description: video.description,
       publishDate: video.publishDate,
       thumbnailUrl: video.thumbnailUrl,
+      duration: video.durationSeconds,
       isDraft: true // This flag will tell Megaphone to save as draft
     });
     
@@ -160,7 +161,8 @@ async function checkForNewVideos() {
             title: video.title,
             description: video.description,
             publishDate: video.publishDate,
-            thumbnailUrl: video.thumbnailUrl
+            thumbnailUrl: video.thumbnailUrl,
+            duration: video.durationSeconds
           });
           
           logger.info(`Successfully uploaded: ${video.title}`);

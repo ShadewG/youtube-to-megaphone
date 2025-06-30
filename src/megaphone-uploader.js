@@ -5,18 +5,17 @@ import { logger } from './logger.js';
 
 export class MegaphoneUploader {
   constructor() {
-    this.apiKey = process.env.MEGAPHONE_API_KEY;
+    this.apiToken = process.env.MEGAPHONE_API_TOKEN;
+    this.networkId = process.env.MEGAPHONE_NETWORK_ID;
     this.podcastId = process.env.MEGAPHONE_PODCAST_ID;
-    this.apiUrl = process.env.MEGAPHONE_API_URL;
+    this.apiUrl = process.env.MEGAPHONE_API_URL || 'https://cms.megaphone.fm/api';
     
-    if (!this.apiUrl) {
-      logger.warn('MEGAPHONE_API_URL not set. You need to get the actual API endpoint from Megaphone support.');
-      logger.warn('The API endpoint might be something like: https://cms.megaphone.fm/api or similar');
-      this.apiUrl = 'https://REPLACE-WITH-ACTUAL-MEGAPHONE-API.com';
+    if (!this.apiToken) {
+      logger.warn('MEGAPHONE_API_TOKEN not set. Generate one in Megaphone Settings.');
     }
   }
 
-  async uploadEpisode({ videoPath, audioPath, title, description, publishDate, thumbnailUrl, isDraft = false }) {
+  async uploadEpisode({ videoPath, audioPath, title, description, publishDate, thumbnailUrl, isDraft = false, duration }) {
     // Support both videoPath and audioPath for backwards compatibility
     const mediaPath = videoPath || audioPath;
     
@@ -37,40 +36,83 @@ export class MegaphoneUploader {
     }
     
     // Check if API is properly configured
-    if (!this.apiUrl || this.apiUrl.includes('REPLACE-WITH-ACTUAL')) {
-      throw new Error('Megaphone API URL not configured. Please contact Megaphone support to get your API endpoint and update MEGAPHONE_API_URL environment variable.');
+    if (!this.apiToken || !this.networkId || !this.podcastId) {
+      throw new Error('Megaphone API not configured. Set MEGAPHONE_API_TOKEN, MEGAPHONE_NETWORK_ID, and MEGAPHONE_PODCAST_ID');
     }
     
     try {
-      // Note: This is a placeholder implementation as Megaphone's API documentation
-      // is not publicly available. You'll need to adjust this based on actual API specs.
-      // 
-      // Common Megaphone API endpoints might include:
-      // - https://cms.megaphone.fm/api/v1/
-      // - https://api-prod.megaphone.fm/
-      // - https://partners.megaphone.fm/api/
-      // 
-      // Contact Megaphone support to get:
-      // 1. Your actual API endpoint
-      // 2. API authentication method (Bearer token, API key, etc.)
-      // 3. Correct endpoints for creating episodes and uploading media
+      // First, upload the audio file
+      const uploadForm = new FormData();
+      uploadForm.append('file', fs.createReadStream(mediaPath));
       
-      // First, create the episode metadata
+      const uploadResponse = await axios.post(
+        `${this.apiUrl}/networks/${this.networkId}/audio`,
+        uploadForm,
+        {
+          headers: {
+            'Authorization': `Token token="${this.apiToken}"`,
+            ...uploadForm.getHeaders()
+          }
+        }
+      );
+
+      const audioFileUrl = uploadResponse.data.url;
+      logger.info(`Uploaded audio file: ${audioFileUrl}`);
+
+      // Create episode with the uploaded audio
       const episodeData = {
         title,
-        description,
-        publishedAt: publishDate,
-        status: isDraft ? 'draft' : 'published',
+        summary: description,
+        pubdate: publishDate,
+        audioFile: audioFileUrl,
+        draft: isDraft,
         podcastId: this.podcastId
       };
 
+      // If we have a thumbnail, add it
+      if (thumbnailUrl) {
+        episodeData.imageFile = thumbnailUrl;
+      }
+
+      // Add ad configuration if enabled
+      if (process.env.ENABLE_ADS === 'true') {
+        // Pre-roll ads
+        episodeData.preCount = parseInt(process.env.PREROLL_COUNT || '1');
+        
+        // Post-roll ads
+        episodeData.postCount = parseInt(process.env.POSTROLL_COUNT || '1');
+        
+        // Mid-roll ads - calculate insertion points based on video duration
+        if (process.env.MIDROLL_INTERVAL && duration) {
+          const interval = parseInt(process.env.MIDROLL_INTERVAL); // in seconds
+          const cuepoints = [];
+          
+          // Calculate midroll positions based on interval
+          // Start at interval, then every interval after that
+          for (let time = interval; time < duration - 60; time += interval) {
+            cuepoints.push({
+              cuepointType: "midroll",
+              startTime: time,
+              adCount: parseInt(process.env.MIDROLL_AD_COUNT || '1'),
+              adSources: ["auto"],
+              isActive: true
+            });
+          }
+          
+          if (cuepoints.length > 0) {
+            episodeData.cuepoints = cuepoints;
+            logger.info(`Added ${cuepoints.length} midroll ad breaks at ${interval}s intervals`);
+          }
+        }
+      }
+
       // Create episode
       const createResponse = await axios.post(
-        `${this.apiUrl}/v1/podcasts/${this.podcastId}/episodes`,
+        `${this.apiUrl}/networks/${this.networkId}/podcasts/${this.podcastId}/episodes`,
         episodeData,
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            'Authorization': `Token token="${this.apiToken}"`,
             'Content-Type': 'application/json'
           }
         }
@@ -78,24 +120,7 @@ export class MegaphoneUploader {
 
       const episodeId = createResponse.data.id;
       logger.info(`Created episode with ID: ${episodeId}`);
-
-      // Upload media file (video or audio)
-      const form = new FormData();
-      const fieldName = videoPath ? 'video' : 'audio';
-      form.append(fieldName, fs.createReadStream(mediaPath));
-      
-      await axios.post(
-        `${this.apiUrl}/v1/episodes/${episodeId}/media`,
-        form,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            ...form.getHeaders()
-          }
-        }
-      );
-
-      logger.info(`Successfully uploaded ${fieldName} for episode: ${title}`);
+      logger.info(`Episode status: ${isDraft ? 'draft' : 'published'}`);
 
       // Clean up media file
       fs.unlinkSync(mediaPath);
