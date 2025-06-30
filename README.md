@@ -1,14 +1,15 @@
 # YouTube to Megaphone Uploader
 
-Automatically monitors YouTube channels and uploads new videos as audio episodes to Megaphone.
+Automatically monitors YouTube channels and uploads new videos to Megaphone.
 
 ## Features
 
 - Monitors multiple YouTube channels for new videos
-- Downloads videos and extracts audio in MP3 format
-- Uploads audio episodes to Megaphone with original metadata
+- Downloads videos in MP4 format
+- Uploads complete videos to Megaphone with original metadata
 - Tracks processed videos to avoid duplicates
 - Runs on Railway with automatic scheduling
+- Web UI with channel ID finder and manual upload testing
 
 ## Setup
 
@@ -52,6 +53,7 @@ Automatically monitors YouTube channels and uploads new videos as audio episodes
 
 ## Important Notes
 
-- Megaphone only supports audio content, so videos are converted to MP3
+- Videos are downloaded in MP4 format and uploaded directly to Megaphone
 - The Megaphone API implementation is a placeholder - you'll need to update it based on actual API documentation
-- Make sure you have sufficient storage for temporary video/audio files
+- Make sure you have sufficient storage for temporary video files
+- Use channel IDs, not channel names (use the Channel ID Finder in the web UI)

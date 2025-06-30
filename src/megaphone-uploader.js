@@ -10,7 +10,9 @@ export class MegaphoneUploader {
     this.apiUrl = process.env.MEGAPHONE_API_URL || 'https://api.megaphone.fm';
   }
 
-  async uploadEpisode({ audioPath, title, description, publishDate, thumbnailUrl, isDraft = false }) {
+  async uploadEpisode({ videoPath, audioPath, title, description, publishDate, thumbnailUrl, isDraft = false }) {
+    // Support both videoPath and audioPath for backwards compatibility
+    const mediaPath = videoPath || audioPath;
     try {
       // Note: This is a placeholder implementation as Megaphone's API documentation
       // is not publicly available. You'll need to adjust this based on actual API specs.
@@ -39,12 +41,13 @@ export class MegaphoneUploader {
       const episodeId = createResponse.data.id;
       logger.info(`Created episode with ID: ${episodeId}`);
 
-      // Upload audio file
+      // Upload media file (video or audio)
       const form = new FormData();
-      form.append('audio', fs.createReadStream(audioPath));
+      const fieldName = videoPath ? 'video' : 'audio';
+      form.append(fieldName, fs.createReadStream(mediaPath));
       
       await axios.post(
-        `${this.apiUrl}/v1/episodes/${episodeId}/audio`,
+        `${this.apiUrl}/v1/episodes/${episodeId}/media`,
         form,
         {
           headers: {
@@ -54,10 +57,10 @@ export class MegaphoneUploader {
         }
       );
 
-      logger.info(`Successfully uploaded audio for episode: ${title}`);
+      logger.info(`Successfully uploaded ${fieldName} for episode: ${title}`);
 
-      // Clean up audio file
-      fs.unlinkSync(audioPath);
+      // Clean up media file
+      fs.unlinkSync(mediaPath);
 
       return episodeId;
     } catch (error) {

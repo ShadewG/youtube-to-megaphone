@@ -108,17 +108,17 @@ app.post('/upload-video', async (req, res) => {
     const video = await youtubeMonitor.getVideoDetails(videoId);
     
     sendLog(`Found video: ${video.title}`);
-    sendLog('Downloading video and extracting audio...');
+    sendLog('Downloading video...');
     
-    // Download and extract audio
-    const audioPath = await youtubeMonitor.downloadAndExtractAudio(video);
+    // Download video
+    const videoPath = await youtubeMonitor.downloadVideo(video);
     
-    sendLog('Audio extracted successfully');
+    sendLog('Video downloaded successfully');
     sendLog('Uploading to Megaphone as draft...');
     
     // Upload to Megaphone as draft
     const episodeId = await megaphoneUploader.uploadEpisode({
-      audioPath,
+      videoPath,
       title: video.title,
       description: video.description,
       publishDate: video.publishDate,
@@ -151,12 +151,12 @@ async function checkForNewVideos() {
         try {
           logger.info(`Processing video: ${video.title}`);
           
-          // Download video and extract audio
-          const audioPath = await youtubeMonitor.downloadAndExtractAudio(video);
+          // Download video
+          const videoPath = await youtubeMonitor.downloadVideo(video);
           
           // Upload to Megaphone
           await megaphoneUploader.uploadEpisode({
-            audioPath,
+            videoPath,
             title: video.title,
             description: video.description,
             publishDate: video.publishDate,

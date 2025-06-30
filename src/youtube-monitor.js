@@ -1,6 +1,5 @@
 import axios from 'axios';
 import youtubedl from 'youtube-dl-exec';
-import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs/promises';
 import path from 'path';
 import { logger } from './logger.js';
@@ -117,9 +116,8 @@ export class YouTubeMonitor {
     };
   }
 
-  async downloadAndExtractAudio(video) {
+  async downloadVideo(video) {
     const tempVideoPath = path.join(this.tempDir, `${video.id}.mp4`);
-    const audioPath = path.join(this.tempDir, `${video.id}.mp3`);
 
     try {
       // Download video using youtube-dl
@@ -131,36 +129,24 @@ export class YouTubeMonitor {
         noPlaylist: true
       });
 
-      // Extract audio using ffmpeg
-      logger.info(`Extracting audio from: ${video.title}`);
+      logger.info(`Successfully downloaded video: ${video.title}`);
       
-      await new Promise((resolve, reject) => {
-        ffmpeg(tempVideoPath)
-          .audioCodec('libmp3lame')
-          .audioBitrate('192k')
-          .output(audioPath)
-          .on('end', resolve)
-          .on('error', reject)
-          .run();
-      });
-
-      // Clean up video file
-      await fs.unlink(tempVideoPath);
-      
-      return audioPath;
+      return tempVideoPath;
     } catch (error) {
-      logger.error(`Error processing video ${video.id}:`, error);
+      logger.error(`Error downloading video ${video.id}:`, error);
       
       // Clean up on error
       try {
         await fs.unlink(tempVideoPath);
       } catch {}
-      try {
-        await fs.unlink(audioPath);
-      } catch {}
       
       throw error;
     }
+  }
+
+  // Keep the old method for backwards compatibility
+  async downloadAndExtractAudio(video) {
+    return this.downloadVideo(video);
   }
 
   async saveState() {

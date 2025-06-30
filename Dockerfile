@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
-# Install ffmpeg
-RUN apk add --no-cache ffmpeg python3 make g++
+# Install python3 for youtube-dl
+RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
